@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+
+# Local OTP router config
+router_configs/
+
+# Optional: ignore GTFS output or Graphs
+graphs/*/
+!graphs/.gitkeep
+
+# Ignore temp ZIPs if any
+*.zip
+
+# Bytecode or logs
+*.pyc
+*.log
+
+# Docker volumes or temp build
+*.tar
+
+router_map.json
