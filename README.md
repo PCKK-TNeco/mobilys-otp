@@ -3,9 +3,10 @@
 Follow these steps to set up the local development environment for the `mobilys-be` project.
 
 1. Clone the Repository
+   ※The cloning process will take time since there are large files included in the repository
    Clone the repository to your local development machine:
 ```
-   git clone https://github.com/PCKK-TNeco/mobilys-otp.git
+   git lfs clone https://github.com/PCKK-TNeco/mobilys-otp.git
    cd mobilys-otp
 ```
 
