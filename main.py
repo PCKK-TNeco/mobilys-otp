@@ -44,8 +44,9 @@ async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...),
 
     os.remove(gtfs_dest)
     os.remove(pbf_dest)
-
-    threading.Thread(target=launch_router, args=(scenario_id,)).start()
+    os.sync()  
+    time.sleep(2)
+    launch_router(scenario_id)
     return {
         "status": "success" if exit_code == 0 else "fail",
     }
@@ -86,8 +87,9 @@ async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), 
 
     os.remove(gtfs_dest)
     os.remove(pbf_dest)
-
-    threading.Thread(target=restart_router, args=(scenario_id,)).start()
+    os.sync()  
+    time.sleep(2)
+    restart_router(scenario_id)
     return {
         "status": "success" if exit_code == 0 else "fail",
     }
