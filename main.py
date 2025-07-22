@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, File
 import os
 import shutil
 import subprocess
@@ -14,6 +14,7 @@ def restart_router(scenario_id):
 
 @app.post("/build_graph")
 async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = None):
+    print(f"[Build Graph] Starting build for scenario {scenario_id} with prefecture {prefecture}")
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
@@ -47,11 +48,11 @@ async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...),
     threading.Thread(target=launch_router, args=(scenario_id,)).start()
     return {
         "status": "success" if exit_code == 0 else "fail",
-        "log": output_lines
     }
 
 @app.post("/edit_graph")
-async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = None):
+async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = File(...)):
+    print(f"[Edit Graph] Starting edit for scenario {scenario_id} with prefecture {prefecture}")
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
@@ -89,6 +90,5 @@ async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), 
     threading.Thread(target=restart_router, args=(scenario_id,)).start()
     return {
         "status": "success" if exit_code == 0 else "fail",
-        "log": output_lines
     }
 
