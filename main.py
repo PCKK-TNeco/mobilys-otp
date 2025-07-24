@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, Form, File
+from fastapi import FastAPI, UploadFile, Form, File, HTTPException
 import os
 import shutil
 import subprocess
@@ -95,3 +95,43 @@ async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), 
         "status": "success" if exit_code == 0 else "fail",
     }
 
+@app.post("/delete_graph")
+async def delete_graph(scenario_id: str = Form(...)):
+    print(f"[Delete Graph] Starting delete for scenario {scenario_id}")
+    build_dir = f"./graphs/{scenario_id}"
+
+    if os.path.exists(build_dir):
+        try:
+            shutil.rmtree(build_dir)
+            print(f"[Delete Graph] Successfully deleted graph directory for {scenario_id}")
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to delete graph directory: {e}"
+            )
+        
+    else:
+        print(f"[Delete Graph] No graph directory found for {scenario_id}")
+        return {
+            "status": "success",
+        }
+
+    proc = subprocess.run(
+        ["python3", "delete_router.py", scenario_id],
+        capture_output=True,
+        text=True
+    )
+    if proc.returncode != 0:
+        err = proc.stderr.strip() or proc.stdout.strip()
+        print(f"[Delete Graph] delete_router.py failed: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting router instance: {err}"
+        )
+
+    time.sleep(1)
+    print(f"[Delete Graph] Successfully deleted router instance for {scenario_id}")
+
+    return {
+        "status": "success",
+    }
