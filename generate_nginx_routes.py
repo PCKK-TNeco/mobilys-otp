@@ -19,4 +19,4 @@ location /routers/{router_id}/ {{
     proxy_set_header Connection "";
 }}
 """)
-print("✅ Nginx routes generated.")
+print("Nginx routes generated.")

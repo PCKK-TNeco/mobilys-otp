@@ -1,8 +1,9 @@
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, File, HTTPException
 import os
 import shutil
 import subprocess
 import threading
+import time
 
 app = FastAPI()
 
@@ -14,6 +15,7 @@ def restart_router(scenario_id):
 
 @app.post("/build_graph")
 async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = None):
+    print(f"[Build Graph] Starting build for scenario {scenario_id} with prefecture {prefecture}")
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
@@ -43,15 +45,16 @@ async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...),
 
     os.remove(gtfs_dest)
     os.remove(pbf_dest)
-
-    threading.Thread(target=launch_router, args=(scenario_id,)).start()
+    os.sync()  
+    time.sleep(2)
+    launch_router(scenario_id)
     return {
         "status": "success" if exit_code == 0 else "fail",
-        "log": output_lines
     }
 
 @app.post("/edit_graph")
-async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = None):
+async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), gtfs_file: UploadFile = File(...)):
+    print(f"[Edit Graph] Starting edit for scenario {scenario_id} with prefecture {prefecture}")
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
@@ -85,10 +88,50 @@ async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), 
 
     os.remove(gtfs_dest)
     os.remove(pbf_dest)
-
-    threading.Thread(target=restart_router, args=(scenario_id,)).start()
+    os.sync()  
+    time.sleep(2)
+    restart_router(scenario_id)
     return {
         "status": "success" if exit_code == 0 else "fail",
-        "log": output_lines
     }
 
+@app.post("/delete_graph")
+async def delete_graph(scenario_id: str = Form(...)):
+    print(f"[Delete Graph] Starting delete for scenario {scenario_id}")
+    build_dir = f"./graphs/{scenario_id}"
+
+    if os.path.exists(build_dir):
+        try:
+            shutil.rmtree(build_dir)
+            print(f"[Delete Graph] Successfully deleted graph directory for {scenario_id}")
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to delete graph directory: {e}"
+            )
+        
+    else:
+        print(f"[Delete Graph] No graph directory found for {scenario_id}")
+        return {
+            "status": "success",
+        }
+
+    proc = subprocess.run(
+        ["python3", "delete_router.py", scenario_id],
+        capture_output=True,
+        text=True
+    )
+    if proc.returncode != 0:
+        err = proc.stderr.strip() or proc.stdout.strip()
+        print(f"[Delete Graph] delete_router.py failed: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting router instance: {err}"
+        )
+
+    time.sleep(1)
+    print(f"[Delete Graph] Successfully deleted router instance for {scenario_id}")
+
+    return {
+        "status": "success",
+    }
