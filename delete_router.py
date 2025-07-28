@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import sys
+import glob
 
 ROUTER_MAP_FILE = "router_map.json"
 
@@ -37,19 +38,16 @@ def delete_router(router_id: str):
         print(f"[Error] Unable to update {ROUTER_MAP_FILE}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    try:
-        subprocess.run(["python3", "generate_nginx_routes.py"], check=True)
-        subprocess.run(
-            ["docker", "exec", "otp-nginx", "nginx", "-s", "reload"],
-            check=True,
-            stdout=subprocess.DEVNULL
-        )
-        print("[Delete Router] Regenerated nginx config and reloaded proxy")
-    except subprocess.CalledProcessError as e:
-        print(f"[Error] Failed to regenerate or reload nginx: {e}", file=sys.stderr)
-        sys.exit(1)
+    nginx_cfg_dir = os.path.join("nginx", "router_configs")
+    pattern = os.path.join(nginx_cfg_dir, f"{router_id}*")
+    for cfg_path in glob.glob(pattern):
+        try:
+            os.remove(cfg_path)
+            print(f"[Delete Router] Removed nginx config file {cfg_path}")
+        except Exception as e:
+            print(f"[Error] Failed to remove nginx config {cfg_path}: {e}", file=sys.stderr)
+            sys.exit(1)
 
-    # Sukses
     sys.exit(0)
 
 
