@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import threading
 import time
+import osmium
 
 app = FastAPI()
 
@@ -135,3 +136,32 @@ async def delete_graph(scenario_id: str = Form(...)):
     return {
         "status": "success",
     }
+
+@app.get("/pbf_bbox")
+async def get_pbf_bbox(prefecture: str):
+    pbf_path = f"./preloaded_osm_files/{prefecture}.pbf"
+    if not os.path.exists(pbf_path):
+        raise HTTPException(status_code=404, detail="PBF file not found")
+
+    try:
+        reader = osmium.io.Reader(pbf_path)
+        header = reader.header()
+        box = header.box()
+        print("Box dir:", dir(box))
+        print("Box repr:", repr(box))
+        reader.close()
+        if box is not None:
+            bbox = {
+                "min_lon": box.bottom_left.x / 1e7,
+                "min_lat": box.bottom_left.y / 1e7,
+                "max_lon": box.top_right.x / 1e7,
+                "max_lat": box.top_right.y / 1e7,
+            }
+        else:
+            bbox = None
+        return {
+            "status": "success",
+            "bbox": bbox
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to extract bounding box: {e}")
