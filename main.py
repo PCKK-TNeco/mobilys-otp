@@ -6,6 +6,8 @@ import threading
 import time
 
 app = FastAPI()
+PREFECTURE_THAT_USED_DRM_LIST = ['shizuoka']
+ 
 
 def launch_router(router_id):
     subprocess.run(["python3", "launch_router.py", router_id])
@@ -19,8 +21,14 @@ async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...),
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
-    pbf_source = f"./preloaded_osm_files/{prefecture}.pbf"
-    pbf_dest = os.path.join(build_dir, f"{prefecture}.pbf")
+    file_path = ''
+    if prefecture in PREFECTURE_THAT_USED_DRM_LIST:
+        file_path = f"{prefecture}.osm"
+    else:
+        file_path = f"{prefecture}.pbf"
+
+    pbf_source = f"./preloaded_osm_files/{file_path}"
+    pbf_dest = os.path.join(build_dir, file_path)
     shutil.copy(pbf_source, pbf_dest)
 
     gtfs_dest = os.path.join(build_dir, gtfs_file.filename)
@@ -62,8 +70,14 @@ async def edit_graph(scenario_id: str = Form(...), prefecture: str = Form(...), 
     if os.path.exists(graph_obj_path):
         os.remove(graph_obj_path)
 
-    pbf_source = f"./preloaded_osm_files/{prefecture}.pbf"
-    pbf_dest = os.path.join(build_dir, f"{prefecture}.pbf")
+    file_path = ''
+    if prefecture in PREFECTURE_THAT_USED_DRM_LIST:
+        file_path = f"{prefecture}.osm"
+    else:
+        file_path = f"{prefecture}.pbf"
+
+    pbf_source = f"./preloaded_osm_files/{file_path}"
+    pbf_dest = os.path.join(build_dir, file_path)
     shutil.copy(pbf_source, pbf_dest)
 
     gtfs_dest = os.path.join(build_dir, gtfs_file.filename)
