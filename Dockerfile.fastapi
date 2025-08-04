@@ -1,11 +1,10 @@
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install Java 11 (Temurin) and basic tools
+# Install Java 11 (Temurin), Docker CLI, and basic tools
 RUN apt-get update && \
-    apt-get install -y wget gnupg2 curl && \
-    apt-get install -y docker.io && \
+    apt-get install -y wget gnupg2 curl gcc g++ libosmium2-dev libprotobuf-dev zlib1g-dev make docker.io && \
     wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor > /usr/share/keyrings/adoptium.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb bookworm main" > /etc/apt/sources.list.d/adoptium.list && \
     apt-get update && \
