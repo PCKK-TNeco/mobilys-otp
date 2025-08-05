@@ -1,4 +1,10 @@
 import json, os
+import environ
+
+env = environ.Env()
+env.read_env()
+
+INTERNAL_URL = env("INTERNAL_URL", default="http://host.docker.internal")
 
 ROUTER_MAP_FILE = "router_map.json"
 NGINX_CONFIG_DIR = "nginx/router_configs"
@@ -13,7 +19,7 @@ for router_id, port in router_map.items():
         f.write(f"""
 location /routers/{router_id}/ {{
     rewrite ^/routers/{router_id}/(.*)$ /$1 break;
-    proxy_pass http://host.docker.internal:{port}/;
+    proxy_pass {INTERNAL_URL}:{port}/;
     proxy_set_header Host $host;
     proxy_http_version 1.1;
     proxy_set_header Connection "";
