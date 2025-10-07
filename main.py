@@ -20,8 +20,8 @@ async def build_graph(scenario_id: str = Form(...), prefecture: str = Form(...),
     build_dir = f"./graphs/{scenario_id}"
     os.makedirs(build_dir, exist_ok=True)
 
-    pbf_source = f"./preloaded_osm_files/{prefecture}.pbf"
-    pbf_dest = os.path.join(build_dir, f"{prefecture}.pbf")
+    pbf_source = f"./preloaded_osm_files/{prefecture}.osm.pbf"
+    pbf_dest = os.path.join(build_dir, f"{prefecture}.osm.pbf")
     shutil.copy(pbf_source, pbf_dest)
 
     gtfs_dest = os.path.join(build_dir, gtfs_file.filename)
